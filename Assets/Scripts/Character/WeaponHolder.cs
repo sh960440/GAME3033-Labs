@@ -18,6 +18,8 @@ public class WeaponHolder : MonoBehaviour
 
     private readonly int AimVerticalHash = Animator.StringToHash("AimVertical");
     private readonly int AimHorizontalHash = Animator.StringToHash("AimHorizontal");
+    private readonly int IsFiringHash = Animator.StringToHash("IsFiring");
+    private readonly int IsReloadingHash = Animator.StringToHash("IsReloading");
 
     private void Awake()
     {
@@ -47,6 +49,28 @@ public class WeaponHolder : MonoBehaviour
         playerAnimator.SetFloat(AimVerticalHash, independentMousePosition.y);
         playerAnimator.SetFloat(AimHorizontalHash, independentMousePosition.x);
     }
+
+    public void OnFire(InputValue button)
+    {
+        if (button.isPressed)
+        {
+            playerController.IsFiring = true;
+            playerAnimator.SetBool(IsFiringHash, playerController.IsFiring);
+        }
+        else
+        {
+            playerController.IsFiring = false;
+            playerAnimator.SetBool(IsFiringHash, playerController.IsFiring);
+        }
+
+    }
+
+    public void OnReload(InputValue button)
+    {
+        playerController.IsReloading = true;
+        playerAnimator.SetBool(IsReloadingHash, playerController.IsReloading);
+    }
+
 
     private void OnAnimatorIK(int layerIndex)
     {
