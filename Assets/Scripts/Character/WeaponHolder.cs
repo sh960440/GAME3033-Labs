@@ -15,6 +15,7 @@ public class WeaponHolder : MonoBehaviour
     private Animator playerAnimator;
 
     private Camera mainCamera;
+    private WeaponComponent equippedWeapon;
 
     private readonly int AimVerticalHash = Animator.StringToHash("AimVertical");
     private readonly int AimHorizontalHash = Animator.StringToHash("AimHorizontal");
@@ -37,9 +38,12 @@ public class WeaponHolder : MonoBehaviour
         if (!spawnedWeapon) return;
 
         spawnedWeapon.transform.parent = weaponSocket;
-        WeaponComponent Weapon = spawnedWeapon.GetComponent<WeaponComponent>();
-        gripLocation = Weapon.handPosition;
-
+        equippedWeapon = spawnedWeapon.GetComponent<WeaponComponent>();
+        gripLocation = equippedWeapon.handPosition;
+        
+        equippedWeapon.Initialize(this, playerController.crosshairComponent);
+        
+        PlayerEvents.Invoke_OnWeaponEquipped(equippedWeapon);
     }
 
     public void OnLook(InputValue delta)
@@ -56,31 +60,44 @@ public class WeaponHolder : MonoBehaviour
         {
             playerController.IsFiring = true;
             playerAnimator.SetBool(IsFiringHash, playerController.IsFiring);
+            equippedWeapon.StartFiring();
         }
         else
         {
             playerController.IsFiring = false;
             playerAnimator.SetBool(IsFiringHash, playerController.IsFiring);
+            equippedWeapon.StopFiring();
         }
 
     }
 
     public void OnReload(InputValue button)
     {
-        playerController.IsReloading = true;
-        playerAnimator.SetBool(IsReloadingHash, playerController.IsReloading);
+        StartReloading();
     }
 
+    public void StartReloading()
+    {
+        playerController.IsReloading = true;
+        playerAnimator.SetBool(IsReloadingHash, playerController.IsReloading);
+        equippedWeapon.StartReloading();
+
+        InvokeRepeating(nameof(StopReloading), 0, 0.1f);
+    }
+
+    public void StopReloading()
+    {
+        if (playerAnimator.GetBool(IsReloadingHash)) return;
+
+        playerController.IsReloading = false;
+        equippedWeapon.StopReloading();
+
+        CancelInvoke(nameof(StopReloading));
+    }
 
     private void OnAnimatorIK(int layerIndex)
     {
         playerAnimator.SetIKPositionWeight(AvatarIKGoal.LeftHand, 1f);
         playerAnimator.SetIKPosition(AvatarIKGoal.LeftHand, gripLocation.position);
-    }
-
-    // Update is called once per frame
-    private void Update()
-    {
-        
     }
 }
